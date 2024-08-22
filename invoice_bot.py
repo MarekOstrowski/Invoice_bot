@@ -11,7 +11,7 @@ def __wait_until_image_is_displayed(image_path, sec):
         try:
             point = gui.locateOnScreen(image_path, confidence=0.85)
             if point:
-                time.sleep(0.3)
+                time.sleep(0.7)
                 return point
             
         except gui.ImageNotFoundException:

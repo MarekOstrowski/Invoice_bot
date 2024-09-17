@@ -11,11 +11,12 @@ def __wait_until_image_is_displayed(image_path, sec):
         try:
             point = gui.locateOnScreen(image_path, confidence=0.85)
             if point:
-                time.sleep(0.7)
+                time.sleep(1)
                 return point
             
         except gui.ImageNotFoundException:
             pass
+
         time.sleep(1.0)
     return False
 
@@ -30,8 +31,6 @@ orders = orders_list()
 
 cords = {"numer_odbiorcy": (654, 240),
          "symbol_link": (531, 297),
-         "ZSB_sprzed_wys": (1224, 431),
-         "ZSB_dane_wys": (550, 550),
          "FSW_sprzed_wys": (1570, 420),
          "FSW_dane_wys": (850, 510),
          "okno": (775, 76),
@@ -47,7 +46,7 @@ def process(order_no):
     gui.press('enter')
     time.sleep(3)
 
-    numer_odbiorcy = __wait_until_image_is_displayed(num_odb_png, 16)
+    numer_odbiorcy = __wait_until_image_is_displayed(num_odb_png, 26)
     if numer_odbiorcy:
         gui.click(numer_odbiorcy, duration=0.25)
         gui.write(' ' + ' ' + str(order_no), interval=0.25)
@@ -56,39 +55,39 @@ def process(order_no):
         gui.moveRel(-130, 60, duration=0.25)
         gui.click()
 
-    zamowienia_sprzedazy = __wait_until_image_is_displayed(zamowienia_sprzedazy_png, 16)
+    zamowienia_sprzedazy = __wait_until_image_is_displayed(zamowienia_sprzedazy_png, 26)
     if zamowienia_sprzedazy:
         print(f"proceeding order no: {order_no}")
-        #  time.sleep(13)
-        gui.click(cords["ZSB_sprzed_wys"], duration=0.25)
-        time.sleep(1)
-        gui.click(cords["ZSB_dane_wys"], duration=0.25)
-        time.sleep(1)
-        gui.press('enter')
-        time.sleep(1)
-        gui.press('f11')
-        time.sleep(1)
-        gui.press('enter')
+        if __wait_until_image_is_displayed(sprzedaz_wysylkowa_png, 22):
+            gui.click(sprzedaz_wysylkowa_png, duration=0.25)
+            if __wait_until_image_is_displayed(dane_wysylkowe_ZSB_png, 22):
+                gui.click(dane_wysylkowe_ZSB_png, duration=0.25)
+                time.sleep(1)
+                gui.press('enter')
+                time.sleep(1)
+                gui.press('f11')
+                time.sleep(1)
+                gui.press('enter')
 
-        generuj_dok = __wait_until_image_is_displayed(generuj_dok_png, 16)
-        zatwierdzone = __wait_until_image_is_displayed(zatwierdzone_png, 16)
-        niezatwierdzdony = __wait_until_image_is_displayed(niezatwierdzony_png, 16)
-        potwierdzone = __wait_until_image_is_displayed(potwierdzone_png, 16)
+        generuj_dok = __wait_until_image_is_displayed(generuj_dok_png, 26)
+        zatwierdzone = __wait_until_image_is_displayed(zatwierdzone_png, 26)
+        niezatwierdzdony = __wait_until_image_is_displayed(niezatwierdzony_png, 26)
+        potwierdzone = __wait_until_image_is_displayed(potwierdzone_png, 26)
 
         if generuj_dok and zatwierdzone:
             print(f"Found generuj_dok_png at {generuj_dok}")
             time.sleep(4)
             if gui.click(generuj_dok, duration=0.25):
                 print("Clicked generuj_dok")  # seems not to work
-            if __wait_until_image_is_displayed(generowanie_dok_png, 16):
+            if __wait_until_image_is_displayed(generowanie_dok_png, 26):
                 gui.press('enter')
-                if __wait_until_image_is_displayed(faktury_sprzedazy_png, 16):  # generowanie faktury sprzedaży
+                if __wait_until_image_is_displayed(faktury_sprzedazy_png, 26):  # generowanie faktury sprzedaży
 
-                    fsw_sprzed_wys = __wait_until_image_is_displayed(sprzedaz_wysylkowa_png, 16)
+                    fsw_sprzed_wys = __wait_until_image_is_displayed(sprzedaz_wysylkowa_png, 26)
                     if fsw_sprzed_wys:
                         gui.click(fsw_sprzed_wys, duration=0.25)
                     time.sleep(2)
-                    fsw_dane_wys = __wait_until_image_is_displayed(dane_wysylkowe_png, 16)
+                    fsw_dane_wys = __wait_until_image_is_displayed(dane_wysylkowe_png, 26)
                     if fsw_dane_wys:
                         gui.click(fsw_dane_wys, duration=0.25)
                         time.sleep(3)
@@ -102,35 +101,47 @@ def process(order_no):
         else:
             print(f"NOT Found {generuj_dok_png} at {generuj_dok}")
 
-    #  Drukowanie
-    time.sleep(10)  # dokument zatwierdzony
-    gui.click(cords["printer"], duration=0.25)
-    drukowanie = __wait_until_image_is_displayed(drukowanie_png, 20)
-    if drukowanie:
-        gui.press(['right', 'up'])
-        time.sleep(1)
-        gui.hotkey('altleft', 'z')  # zmiana drukarki
-        #  time.sleep(6)
-        if __wait_until_image_is_displayed(zastosuj_clicked_png, 12):
-            #  gui.hotkey('altleft', 'd')  # drukowanie
-            drukuj = __wait_until_image_is_displayed(drukuj_png, 12)
-            if drukuj:
-                gui.click(drukuj)
-                zapisywanie_wydruku = __wait_until_image_is_displayed(zapisywanie_wydruku_png, 20)
-                #  if zapisywanie_wydruku:
-                nazwa_pliku = __wait_until_image_is_displayed(nazwa_pliku_png, 20)
-                if nazwa_pliku or zapisywanie_wydruku:
-                    gui.write(str(order_no), interval=0.25)   # wpisanie nazwy pliku
-                    time.sleep(6)
-                    gui.hotkey('altleft', 'z')  # zapisanie .pdf
-                    time.sleep(2)
-    #  Koniec Drukowania
+    # Pre Drukowanie szablon niestandardowy
 
-            for _ in range(3):
-                gui.click(cords['okno'], duration=0.25)
-                time.sleep(2)
-                gui.press(['up', 'enter'])
-                time.sleep(2)
+    pre_drukowanie = __wait_until_image_is_displayed(pre_drukowanie_png, 20)
+    if pre_drukowanie:
+        gui.click(pre_drukowanie, duration=0.25)
+        if __wait_until_image_is_displayed(faktura_walutowa_png, 12):
+            gui.press('enter')
+            if __wait_until_image_is_displayed(faktura_walutowa_wygenerowana_png, 22):
+
+                #  Drukowanie
+                time.sleep(2)  # dokument zatwierdzony
+                gui.click(cords["printer"], duration=0.25)
+                drukowanie = __wait_until_image_is_displayed(drukowanie_png, 20)
+                if not drukowanie:
+                    gui.click(cords["printer"], duration=0.25)
+                if drukowanie:
+                    gui.press(['right', 'up'])
+                    time.sleep(1)
+                    gui.hotkey('altleft', 'z')  # zmiana drukarki
+                    #  time.sleep(6)
+                    if __wait_until_image_is_displayed(zastosuj_clicked_png, 22):
+                        #  gui.hotkey('altleft', 'd')  # drukowanie
+                        drukuj = __wait_until_image_is_displayed(drukuj_png, 22)
+                        if drukuj:
+                            gui.click(drukuj)
+                            zapisywanie_wydruku = __wait_until_image_is_displayed(zapisywanie_wydruku_png, 20)
+                            #  if zapisywanie_wydruku:
+                            nazwa_pliku = __wait_until_image_is_displayed(nazwa_pliku_png, 20)
+                            if nazwa_pliku or zapisywanie_wydruku:
+                                gui.write(str(order_no), interval=0.25)  # wpisanie nazwy pliku
+                                time.sleep(6)
+                                gui.hotkey('altleft', 'z')  # zapisanie .pdf
+                                time.sleep(2)
+                #  Koniec Drukowania
+
+    time.sleep(4)
+    for _ in range(4):
+        gui.click(cords['okno'], duration=0.25)
+        time.sleep(2)
+        gui.press(['up', 'enter'])
+        time.sleep(2)
 
 
 def terminal():
@@ -148,13 +159,12 @@ def terminal_png():
     subprocess.call(["cmd", "/c", "start", "/max", terminal_path])
     time.sleep(5)
 
-    point = __wait_until_image_is_displayed(frog_png, 8)
+    point = __wait_until_image_is_displayed(frog_png, 20)
     if point:
         print(f"Found {frog_png} at {point}")
         gui.doubleClick(point, duration=0.5)
-        print("pressed enter")
 
-        if __wait_until_image_is_displayed(logowanie_png, 6):
+        if __wait_until_image_is_displayed(logowanie_png, 20):
             print(f"Found {logowanie_png} at {gui.locateOnScreen(logowanie_png, confidence=0.85)}")
             gui.press('enter')
             print("pressed enter")
